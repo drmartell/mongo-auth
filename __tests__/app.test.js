@@ -4,17 +4,17 @@ const request = require('supertest');
 const app = require('../lib/app');
 const connect = require('../lib/utils/connect');
 const mongoose = require('mongoose');
-const User = require('..lib/models/User');
+const User = require('../lib/models/User');
 
 describe('app routes', () => {
   beforeAll(() => connect());
-
   beforeEach(() => mongoose.connection.dropDatabase());
 
   it('can sign up a user', () => 
-    request(app).post('api/v1/auth/signup')
+    request(app).post('/api/v1/auth/signup')
       .send({ email: 'test@test.com', password: 'password' })
       .then(res => {
+        //expect(res.header['set-cookie'][0].toEqual(expect.stringContaining('session=')));
         expect(res.body).toEqual({
           _id: expect.any(String),
           email: 'test@test.com',
@@ -25,8 +25,8 @@ describe('app routes', () => {
 
   it('can login a user', async() => {
     const user = await User.create({ email: 'test@test.com', password: 'password' });
-    return request(app).post('api/v1/auth/login')
-      .send({ email: 'no@test.com', password: 'password' })
+    return request(app).post('/api/v1/auth/login')
+      .send({ email: 'test@test.com', password: 'password' })
       .then(res => {
         expect(res.body).toEqual({
           _id: user.id,
@@ -38,8 +38,8 @@ describe('app routes', () => {
 
   it('fails when a bad email is used', async() => {
     await User.create({ email: 'test@test.com', password: 'password' });
-    return request(app).post('api/v1/auth/login')
-      .send({ email: 'test@test.com', password: 'password' })
+    return request(app).post('/api/v1/auth/login')
+      .send({ email: 'no@test.com', password: 'password' })
       .then(res => {
         expect(res.body).toEqual({
           message: 'Invalid Email/Password',
@@ -50,8 +50,8 @@ describe('app routes', () => {
 
   it('fails when a bad password is used', async() => {
     await User.create({ email: 'test@test.com', password: 'pass' });
-    return request(app).post('api/v1/auth/login')
-      .send({ email: 'test', password: 'pass' })
+    return request(app).post('/api/v1/auth/login')
+      .send({ email: 'test@test.com', password: 'wrong-password' })
       .then(res => {
         expect(res.body).toEqual({
           message: 'Invalid Email/Password',
